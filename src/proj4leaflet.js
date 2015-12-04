@@ -108,8 +108,49 @@
 		},
 
 		scale: function(zoom) {
-			return this._scales[zoom];
+			var iZoom = Math.floor(zoom),
+				baseScale,
+				nextScale,
+				scaleDiff,
+				zDiff;
+			if (zoom === iZoom) {
+				return this._scales[zoom];
+			} else {
+				// Non-integer zoom, interpolate
+				baseScale = this._scales[iZoom];
+				nextScale = this._scales[iZoom + 1];
+				scaleDiff = nextScale - baseScale;
+				zDiff = (zoom - iZoom);
+				return baseScale + scaleDiff * zDiff;
+			}
 		},
+
+		zoom: function(scale) {
+			// Find closest number in this._scales, down 
+			var downScale = this._closestElement(this._scales, scale),
+				downZoom = this._scales.indexOf(downScale),
+				nextZoom,
+				scaleDiff;
+			// Check if scale is downScale => return array index
+			if (scale === downScale) {
+				return downZoom;
+			}
+			// Interpolate
+			nextZoom = downZoom + 1;
+			scaleDiff = this._scales[nextZoom] - downScale;
+			return (scale - downScale) / scaleDiff + downZoom;
+		},
+
+		/* Get the closest lowest element in an array */
+		_closestElement: function(array, element) {
+			var low;
+			for (var i = array.length; i--;) {
+				if (array[i] <= element && (low === undefined || low < array[i])) {
+					low = array[i];
+				}
+			}
+			return low;
+		}
 	});
 
 	L.Proj.GeoJSON = L.GeoJSON.extend({
